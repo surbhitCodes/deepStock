@@ -7,6 +7,8 @@ from sklearn.preprocessing import MinMaxScaler
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from transformers.models.align.convert_align_tf_to_hf import preprocess
+
 from scraper import NewsScraper
 from transformers import pipeline
 
@@ -30,8 +32,13 @@ class StockPredict:
         self.historical_data = pd.read_csv(self.history_filepath)
         self.db = MongoClient(db_host, db_port)[db_name]
         self.news_collection = self.db[collection_name]
+        self.preProcess()  # optional, can be commented out
 
-        # preprocess stock price data (optional)
+    def preProcess(self):
+        """
+        preprocess stock price data
+        :return: nothing
+        """
         self.historical_data['date'] = pd.to_datetime(self.historical_data['date'])
         self.historical_data = self.historical_data.sort_values(by='date')
         scaler = MinMaxScaler(feature_range=(0, 1))
@@ -39,9 +46,8 @@ class StockPredict:
         self.historical_data[price_features] = scaler.fit_transform(
             self.historical_data[price_features])  # fit transform
 
-    def get_sentiment_score(self, stock_name, date):
+    def getSentimentScore(self, date):
         """
-        :param stock_name: name of the stock
         :param date: date for sentiment analysis
         :return: Total score of the sentiment for that day
         """
@@ -49,13 +55,57 @@ class StockPredict:
         end_date = date + pd.Timedelta(days=1)
         articles = self.news_collection.find(
             {
-                'news_heading': {'$regex': stock_name, '$options': 'i'},
+                'news_heading': {'$regex': self.stock_name, '$options': 'i'},
                 'date': {'$gte': start_date.strf, '$lte': end_date}
 
             }
         )
 
+        sentiment_score = 0
+        count = 0
+        for article in articles:
+            sentiment = self.sentiment_analyzer(article['news_heading'])[0]
+
+
+    def createDataset(self):
+        features = []
+        targets = []
+
+        for i in range(1, len(self.historical_data)-1):
+            date = self.historical_data['date'].iloc[i]
+
+            price_features = self.historical_data['Open', 'High', 'Low', 'Close', 'Volume'].iloc[i].values
+
+            news_sentiment: None = self.getSentimentScore(date)
+
+            combined_features = np.append(price_features, news_sentiment)
+            features.append(combined_features)
+
+
+
+    def trainModel(self):
+        pass
+
+    def latestData(self):
+        """
+        function to supply latest stock data for prediction
+        :rtype: object
+        """
+        pass
+
+    def predict(self, data):
+        """
+        main function to initiate prediction after training
+        :rtype: object
+        """
+        pass
+
 
 if '__name__' == '__main__':
-    predict = StockPredict('sbi', 'sbi.csv')
-    predict.predict()
+    NewsScraper().update_news()  # update db with latest news available
+    predictor = StockPredict('sbi', 'sbi.csv')
+    predictor.trainModel()
+    predictions = predictor.predict(predictor.latestData())
+    pd.DataFrame(predictions).to_csv('predictions.csv')
+    print(f'Predictions: {predictions}')
+
