@@ -4,12 +4,14 @@ from pymongo import MongoClient
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt
-from news_scraper import NewsScraper
+from news_scraper import NewsScraper  # Ensure this is correctly imported
+
 
 class StockPredict:
     def __init__(self, stock_name, history_filepath, db_name='deepStockDB', collection_name='news_collection',
@@ -45,10 +47,19 @@ class StockPredict:
         """
         Preprocess stock price data (sort by date, normalize, etc.)
         """
+        # Ensure the date column exists
+        if 'Date' not in self.historical_data.columns:
+            raise KeyError(f"Date column 'Date' not found in the CSV file. Available columns: {self.historical_data.columns}")
+
         self.historical_data['Date'] = pd.to_datetime(self.historical_data['Date'])
         self.historical_data = self.historical_data.sort_values(by='Date').reset_index(drop=True)
         
         price_features = ['Open', 'High', 'Low', 'Close', 'Volume']
+        # Check if all required price features are present
+        missing_features = [feat for feat in price_features if feat not in self.historical_data.columns]
+        if missing_features:
+            raise KeyError(f"Missing price features in the CSV file: {missing_features}")
+
         self.historical_data[price_features] = self.price_scaler.fit_transform(
             self.historical_data[price_features]
         )
@@ -285,6 +296,18 @@ if __name__ == '__main__':
     # Inverse scale the predictions and actual values
     test_predictions = predictor.inverse_scale_prediction(test_predictions_scaled)
     y_test_original = predictor.inverse_scale_prediction(y_test)
+    
+    # Compute Evaluation Metrics
+    mae = mean_absolute_error(y_test_original, test_predictions)
+    mse = mean_squared_error(y_test_original, test_predictions)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test_original, test_predictions)
+    
+    print("\nEvaluation Metrics on Test Set:")
+    print(f"Mean Absolute Error (MAE): {mae:.4f}")
+    print(f"Mean Squared Error (MSE): {mse:.4f}")
+    print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
+    print(f"R-squared (R²): {r2:.4f}")
     
     # Plot the predictions vs actual values
     predictor.plot_predictions(y_test_original, test_predictions)
