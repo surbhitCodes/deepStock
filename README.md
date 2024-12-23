@@ -2,13 +2,15 @@
 
 ## Sample Run on SBI data (Ran on Dec 23, 2024)
 ### Stock Prediction
-<img width="742" alt="image" src="https://github.com/user-attachments/assets/01817878-83a8-453f-8f55-b408c6408dac" />
+<img width="756" alt="image" src="https://github.com/user-attachments/assets/e192bcf8-1ce2-4cb3-a4e3-cdd9461f617b" />
 
 ### Training Loss
-<img width="1076" alt="image" src="https://github.com/user-attachments/assets/e555e54a-811a-4cd6-9409-064a7360f519" />
+<img width="1053" alt="image" src="https://github.com/user-attachments/assets/9aaaa6c7-3e31-4d09-b3d1-4fe7cee7d244" />
 
 ### Accuracy Plot
-<img width="1076" alt="image" src="https://github.com/user-attachments/assets/44e7292d-92aa-4694-b3d2-1e453b4e5767" />
+<img width="296" alt="image" src="https://github.com/user-attachments/assets/4e0d1b84-cdff-4fd9-b8fc-e38af7ac4c50" />
+
+<img width="1053" alt="image" src="https://github.com/user-attachments/assets/f1f43237-0416-42aa-aba0-904ce0ccedf3" />
 
 ## How to use:
 - Clone the repository, open terminal, choose a folder and run 'git clone https://github.com/surbhitCodes/deepStock.git'
